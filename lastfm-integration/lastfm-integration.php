@@ -2,7 +2,7 @@
 
 /*
 Plugin Name:       Last.FM Integration
-Description:       A plugin that seemlessly integrates Last.FM recent songs with Wordpress
+Description:       A plugin that seamlessly integrates Last.FM recent songs with Wordpress
 Version:           1.0.0
 Author:            Sunil Kumar
 Author URI:        http://sunilkumar.in/
@@ -16,7 +16,14 @@ function register_lastfm_spann_widget()
     register_widget('LastFM_Spann_Widget');
 }
 
+function load_lastfm_spann_js()
+{
+    wp_enqueue_script('jquery-ui-core');
+    wp_enqueue_script('lastfm_spann_js', plugin_dir_url(__FILE__) . 'lastfm-integration.js', array('jquery', 'jquery-ui-core'));
+}
+
 add_action('widgets_init', 'register_lastfm_spann_widget');
+add_action('wp_head', 'load_lastfm_spann_js');
 
 class LastFM_Spann_Widget extends WP_Widget
 {
@@ -51,7 +58,22 @@ class LastFM_Spann_Widget extends WP_Widget
               lastfm_spann_username="<?= $instance['lastfm_spann_username']; ?>"
               lastfm_spann_max_number_of_tracks="<?= $instance['lastfm_spann_max_number_of_tracks']; ?>"
               lastfm_spann_play_videos_on_click="<?= $instance['lastfm_spann_play_videos_on_click']; ?>"
+              lastfm_spann_refresh_interval="<?= $instance['lastfm_spann_refresh_interval']; ?>"
               style="display: none"></span>
+        <div id="div_lastfm_spann_popup_background" onclick="hideLastfmVideo()"
+             style="opacity: 0.8; width:100%; height:100%; position:fixed; top:0; bottom:0; left:0; right:0; margin: auto; z-index: 50001; display:none;"></div>
+        <div id="div_lastfm_spann_popup"
+             style="width:640px; height:360px; position:fixed; top:0; bottom:0; left:0; right:0; margin: auto; display:none;"></div>
+        <style type="text/css">
+            @keyframes popupBackground {
+                from {
+                    background-color: transparent;
+                }
+                to {
+                    background-color: #000000;
+                }
+            }
+        </style>
 
         <?php
         echo $args['after_widget'];
@@ -66,10 +88,11 @@ class LastFM_Spann_Widget extends WP_Widget
      */
     public function form($instance)
     {
-        $title = !empty($instance['title']) ? $instance['title'] : __('I\'m listening to: ', 'text_domain');
+        $title = !empty($instance['title']) ? $instance['title'] : __('', 'text_domain');
         $lastfm_spann_username = !empty($instance['lastfm_spann_username']) ? $instance['lastfm_spann_username'] : __('', 'text_domain');
         $lastfm_spann_max_number_of_tracks = !empty($instance['lastfm_spann_max_number_of_tracks']) ? $instance['lastfm_spann_max_number_of_tracks'] : __('20', 'text_domain');
         $lastfm_spann_play_videos_on_click = !empty($instance['lastfm_spann_play_videos_on_click']) ? $instance['lastfm_spann_play_videos_on_click'] : __('Yes', 'text_domain');
+        $lastfm_spann_refresh_interval = !empty($instance['lastfm_spann_refresh_interval']) ? $instance['lastfm_spann_refresh_interval'] : __('60', 'text_domain');
         ?>
         <p>
             <label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Title:'); ?></label>
@@ -94,6 +117,12 @@ class LastFM_Spann_Widget extends WP_Widget
             <input class="widefat" id="<?php echo $this->get_field_id('lastfm_spann_play_videos_on_click'); ?>"
                    name="<?php echo $this->get_field_name('lastfm_spann_play_videos_on_click'); ?>"
                    type="text" value="<?php echo esc_attr($lastfm_spann_play_videos_on_click); ?>">
+
+            <label
+                for="<?php echo $this->get_field_id('lastfm_spann_refresh_interval'); ?>"><?php _e('Refresh Interval (in Seconds):'); ?></label>
+            <input class="widefat" id="<?php echo $this->get_field_id('lastfm_spann_refresh_interval'); ?>"
+                   name="<?php echo $this->get_field_name('lastfm_spann_refresh_interval'); ?>"
+                   type="text" value="<?php echo esc_attr($lastfm_spann_refresh_interval); ?>">
         </p>
     <?php
     }
@@ -115,6 +144,7 @@ class LastFM_Spann_Widget extends WP_Widget
         $instance['lastfm_spann_username'] = (!empty($new_instance['lastfm_spann_username'])) ? strip_tags($new_instance['lastfm_spann_username']) : '';
         $instance['lastfm_spann_max_number_of_tracks'] = (!empty($new_instance['lastfm_spann_max_number_of_tracks'])) ? strip_tags($new_instance['lastfm_spann_max_number_of_tracks']) : '';
         $instance['lastfm_spann_play_videos_on_click'] = (!empty($new_instance['lastfm_spann_play_videos_on_click'])) ? strip_tags($new_instance['lastfm_spann_play_videos_on_click']) : '';
+        $instance['lastfm_spann_refresh_interval'] = (!empty($new_instance['lastfm_spann_refresh_interval'])) ? strip_tags($new_instance['lastfm_spann_refresh_interval']) : '';
 
         return $instance;
     }

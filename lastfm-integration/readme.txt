@@ -8,7 +8,7 @@ Stable tag: 4.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-A plugin that seemlessly integrates Last.FM recent songs with Wordpress.
+A plugin that seamlessly integrates Last.FM recent songs with Wordpress.
 
 == Description ==
 
