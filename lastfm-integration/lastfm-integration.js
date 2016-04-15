@@ -12,6 +12,8 @@ var lastfmPlaybackSwitch = lastfmParams.attr("lastfm_spann_play_videos_on_click"
 var apiKey = "734ded501071f914dd5347659619c1b9";
 var lastfmApiUrl = "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=" + lastfmUsername + "&api_key=" + apiKey + "&format=json&random=" + Math.random();
 
+var isMobile = window.matchMedia("only screen and (max-width: 760px)");
+
 function setDefaultValues() {
     if (lastfmTracks == undefined || isNaN(lastfmTracks) || lastfmTracks == "") {
         lastfmTracks = 20;
@@ -39,11 +41,24 @@ function displayInitialTrack() {
 
 function displayMainTrack(id) {
     var trackDiv = $("#" + id);
+    var playedTime = trackDiv.attr('track_status');
+    if (!isNaN(playedTime)) {
+        var curTime = Date.now() / 1000;
+        var timeDiff = (curTime - playedTime);
+        var mins = timeDiff / 60;
+        var hours = mins / 60;
+
+        if (!isNaN(hours) && hours > 1) {
+            playedTime = Math.floor(hours) + " hours ago"
+        } else if (!isNaN(mins) && mins > 1) {
+            playedTime = Math.floor(mins) + " minutes ago"
+        }
+    }
 
     var img = trackDiv.find('img:first');
     $("#lastfm_spann_track_name").text(trackDiv.attr('track_name'));
     $("#lastfm_spann_artist_name").text(trackDiv.attr('artist_name'));
-    $("#lastfm_spann_track_status").text(trackDiv.attr('track_status'));
+    $("#lastfm_spann_track_status").text(playedTime);
     $("#lastfm_spann_last_track_img").attr('src', img.attr('src'));
 }
 
@@ -52,19 +67,30 @@ function onTrackHover(id) {
 }
 
 function onTrackClick(id) {
-    var trackDiv = $("#" + id);
-    var trackName = trackDiv.attr('track_name');
-    var artistName = trackDiv.attr('artist_name');
+    if (lastfmPlaybackSwitch == "yes") {
+        var trackDiv = $("#" + id);
+        var popupDiv = $("#div_lastfm_spann_popup");
 
-    var youtube_embed_url = "https://www.youtube.com/embed/?listType=search&list=" + trackName + "+%20+" + artistName + "&autoplay=1";
-    var html = '<iframe width="640" height="360" src="' + youtube_embed_url + '" frameborder="0" allowfullscreen></iframe>';
+        var trackName = trackDiv.attr('track_name');
+        var artistName = trackDiv.attr('artist_name');
+        var widthHeightHtml = " width='640px' height='360px' ";
 
-    var popupDiv = $("#div_lastfm_spann_popup");
-    popupDiv.html(html);
-    popupDiv.css({"z-index": 50002, "display": "block"});
+        if (isMobile.matches) {
+            widthHeightHtml = " width='300px' height='150px' ";
+            popupDiv.css({width: '300px', height: '150px', position: 'fixed', top: 0, bottom: 0, left: 0, right: 0, margin: 'auto', display: 'none'});
+        } else {
+            popupDiv.css({width: '640px', height: '360px', position: 'fixed', top: 0, bottom: 0, left: 0, right: 0, margin: 'auto', display: 'none'});
+        }
 
-    var popupBackground = $("#div_lastfm_spann_popup_background");
-    popupBackground.css({"z-index": 50001, "display": "block", "animation-name": "popupBackground", "animation-duration": "4s", "animation-delay": "1s", "animation-fill-mode": "forwards"});
+        var youtube_embed_url = "https://www.youtube.com/embed/?listType=search&list=" + trackName + "+%20+" + artistName + "&autoplay=1";
+        var html = '<iframe ' + widthHeightHtml + ' src="' + youtube_embed_url + '" frameborder="0" allowfullscreen></iframe>';
+
+        popupDiv.html(html);
+        popupDiv.css({"z-index": 50002, "display": "block"});
+
+        var popupBackground = $("#div_lastfm_spann_popup_background");
+        popupBackground.css({"z-index": 50001, "display": "block", "animation-name": "popupBackground", "animation-duration": "4s", "animation-delay": "1s", "animation-fill-mode": "forwards"});
+    }
 }
 
 function hideLastfmVideo() {
@@ -73,7 +99,7 @@ function hideLastfmVideo() {
     popupDiv.html('');
     popupDiv.css({"z-index": -1002, "display": "none"});
 //    popupBackground.css({"animation-name": "popupBackground", "animation-duration": "2s", "animation-fill-mode": "forwards", "animation-direction": "reverse"});
-    setTimeout(function() {
+    setTimeout(function () {
         popupBackground.css({"z-index": -1003, "display": "none", "background": "transparent"})
     }, 10);
 }
@@ -90,7 +116,7 @@ function displayTrackInfo(track, i) {
     if (track['date'] != undefined) {
         trackStatus = track['date']['uts'];
     }
-    trackHistoryDiv.append('<div id="lastfm_spann_track_' + i + '" track_name="' + track.name + '" artist_name="' + track.artist['#text'] + '" track_status="' + trackStatus + '" style="width: 34px; height: 34px; float: left; cursor: pointer; margin: 1px;" onmouseover="onTrackHover(this.id)" onmouseout="displayInitialTrack()" onclick="onTrackClick(this.id)"><img src="' + imageSource + '" style="width: 34px; height: 34px;" /></div>');
+    trackHistoryDiv.append('<div id="lastfm_spann_track_' + i + '" track_name="' + track.name + '" artist_name="' + track.artist['#text'] + '" track_status="' + trackStatus + '" style="width: 34px; height: 34px; float: left; cursor: pointer; margin: 1px;" onmouseover="onTrackHover(this.id)" onclick="onTrackClick(this.id)"><img src="' + imageSource + '" style="width: 34px; height: 34px;" /></div>');
 }
 
 function fillLastfmData() {
@@ -111,7 +137,7 @@ function lastfmSpannMain() {
     }
 }
 
-setInterval(function() {
+setInterval(function () {
     lastfmSpannMain();
 }, lastfmRefreshInterval * 1000);
 lastfmSpannMain();

@@ -61,9 +61,9 @@ class LastFM_Spann_Widget extends WP_Widget
               lastfm_spann_refresh_interval="<?= $instance['lastfm_spann_refresh_interval']; ?>"
               style="display: none"></span>
         <div id="div_lastfm_spann_popup_background" onclick="hideLastfmVideo()"
-             style="opacity: 0.8; width:100%; height:100%; position:fixed; top:0; bottom:0; left:0; right:0; margin: auto; z-index: 50001; display:none;"></div>
+             style="opacity: 0.85; width:100%; height:100%; position:fixed; top:0; bottom:0; left:0; right:0; margin: auto; z-index: 50001; display:none;"></div>
         <div id="div_lastfm_spann_popup"
-             style="width:640px; height:360px; position:fixed; top:0; bottom:0; left:0; right:0; margin: auto; display:none;"></div>
+             style="display: none"></div>
         <style type="text/css">
             @keyframes popupBackground {
                 from {
@@ -72,6 +72,9 @@ class LastFM_Spann_Widget extends WP_Widget
                 to {
                     background-color: #000000;
                 }
+            }
+            @media only screen and (max-width: 760px) {
+                #only_mobile { display: block; }
             }
         </style>
 
